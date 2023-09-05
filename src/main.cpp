@@ -3,16 +3,16 @@
 #include "Keyboard.h"
 #include <Config.h>
 #include <SerialProcessor.h>
+#include "CommandProcessors.h"
 
 #define SERIAL_BAUD 9600
 
 char buffer[6];
 Configuration config;
 SerialProcessor sp(&Serial);
+ConfigCmdProcessor configCmdProc(&sp);
 
 void printMsg();
-void startConfig(Buffer* buffer);
-void saveConfig(Buffer* buffer);
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
@@ -20,10 +20,11 @@ void setup() {
   Log.begin(LOG_LEVEL_VERBOSE, &Serial, false);
   Log.trace("Starting..." CR);
 
-  sp.registerCommand("config", &startConfig);
-  sp.registerCommand("save", &saveConfig);
-  sp.registerCommand("another", &saveConfig);
-  sp.registerCommand("more", &saveConfig);
+
+  sp.registerCommand("config", &configCmdProc);
+  // sp.registerCommand("save", &saveConfig);
+  // sp.registerCommand("another", &saveConfig);
+  // sp.registerCommand("more", &saveConfig);
 
 
   sp.debug();
@@ -52,13 +53,4 @@ void loop() {
 
 void printMsg() {
   Log.trace("I got called" CR);
-}
-
-void startConfig(Buffer* buffer) {
-  Log.trace(F("startConfig()" CR));
-  sp.setLineProcessor(&Configuration::processLine);
-}
-
-void saveConfig(Buffer* buffer) {
-  Log.trace(F("saveConfig()" CR));
 }

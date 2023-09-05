@@ -15,6 +15,7 @@ class Buffer {
         int ParseInt();
         void Clear();
         bool AtEnd();
+        char* getBuffer();
 
     private:
         char _buffer[BUFFERSIZE + 1];

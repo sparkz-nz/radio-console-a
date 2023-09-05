@@ -35,7 +35,6 @@ class Configuration {
     void Recall();
     void ReadFromSerial();
     void ClearConfig();
-    static void processLine(char* buffer);
 
   private:
     enum SwitchTypes {

@@ -30,3 +30,11 @@ char Buffer::GetFirst() {
     _index = 0;
     return GetNext();
 }
+
+char* Buffer::getBuffer() {
+    return _buffer;
+}
+
+bool Buffer::AtEnd() {
+    return (_buffer[_index] == NULL);
+}

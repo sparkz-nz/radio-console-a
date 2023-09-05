@@ -5,46 +5,45 @@
 #include <ArduinoLog.h>
 #include "Buffer.h"
 
-struct Command {
-    const char* cmdString;
-    void(*handler)(Buffer*);
-    Command* next;
-};
+class SerialProcessor;
 
 class CommandLineProcessor {
     public:
-        virtual void processLine(Buffer* buffer);
+        CommandLineProcessor() {};
+        SerialProcessor* sp;
+        CommandLineProcessor(SerialProcessor *serialProc) : sp(serialProc) {}
+        virtual void processLine(Buffer* buffer) {};
     private:
-}
+};
 
-class SerialProcessor : CommandLineProcessor {
+class CmdProc : public CommandLineProcessor {
+    public:
+        void processLine(Buffer* buffer);
+};
+
+struct Command {
+    const char* cmdString;
+    CommandLineProcessor* processor;
+    Command* next;
+};
+
+class SerialProcessor : public CommandLineProcessor {
     public:
         SerialProcessor(Stream* serial);
-        //SerialProcessor(Serial_& serial) : _serial(serial), processPtr(&processCommands) {};
         void checkSerial();
         bool read();
         void debug();
-        void registerCommand(const char* command, void(*callback)(Buffer*));
-        void setLineProcessor(void (*lineProcessor)(char*));
+        void registerCommand(const char* command, CommandLineProcessor* cmdProc);
+        void setLineProcessor(CommandLineProcessor* lineProc);
         void resetLineProcessor();
-
+        friend class CmdProc;
 
     private:
         Buffer _buffer;
         Stream *_serial;
-        CommandLineProcessor * processCommands();
-        //static void processCommands();
-        CommandLineProcessor processLine();
-        //void(*processPtr)();
+        CommandLineProcessor* currentLineProc;
         Command* commandList = NULL;
-
-        class CmdProc : CommandLineProcessor {
-            public:
-                void processLine(Buffer* buffer);
-        };
-
-        CmdProc* cmdProc;
-
+        CmdProc cmdProc;
 };
 
 

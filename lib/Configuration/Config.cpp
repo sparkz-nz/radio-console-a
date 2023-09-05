@@ -54,10 +54,6 @@ void Configuration::ClearConfig() {
 
 }
 
-void Configuration::processLine(char *buffer)
-{
-}
-
 void Configuration::AddConfig(SwitchTypes switchType) {
     int numSwitches;
     char switchChar;
