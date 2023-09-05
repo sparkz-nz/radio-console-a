@@ -3,6 +3,8 @@
 #include "SerialProcessor.h"
 #include "Buffer.h"
 
+#define ECHO_ON 1
+
 void printCmdList(Command* list);
 
 SerialProcessor::SerialProcessor(Stream* serial):
@@ -29,20 +31,47 @@ bool SerialProcessor::read() {
     if (_serial->available()) {
         char c = _serial->read();
 
-        // if CR the check if next is LF or change to LF to signal eol
-        if (c == '\r') {
-            if (_serial->peek() == '\n') {
-                _serial->read();
-            }
-            c='\n';
+        switch (c) {
+            case '\b':
+                if (_buffer.Delete() && ECHO_ON) _serial->write("\b \b");
+                break;
+
+            case '\r':
+                if (_serial->peek() == '\n') {
+                    _serial->read();
+                }
+
+            case '\n':
+                if (ECHO_ON) _serial->write('\n');
+                return true;
+
+            default:
+                if (ECHO_ON) _serial->write(c);
+                _buffer.AddChar(c);
         }
 
-        if (c == '\n') {
-            return true; // end of line
-        }
-        else {
-            _buffer.AddChar(c);
-        }
+        // // if CR then check if next is LF or change to LF to signal eol
+        // if (c == '\r') {
+        //     if (_serial->peek() == '\n') {
+        //         _serial->read();
+        //     }
+        //     c='\n';
+        // }
+
+        // if (ECHO_ON) _serial->write(c);
+
+        // if (c == '\b') {
+        //     Log.trace(F("DELETE"));
+        //     _buffer.Delete();
+        //     if (ECHO_ON) _serial->write(F("<<<"));
+        // }
+
+        // if (c == '\n') {
+        //     return true; // end of line
+        // }
+        // else {
+        //     _buffer.AddChar(c);
+        // }
     }
     return false;
 }
@@ -54,7 +83,7 @@ bool SerialProcessor::read() {
 void CmdProc::processLine(Buffer *buffer) {
     // walk through commandList and compare to start of buffer
     // if found, call the callback for that command with the buffer as a parameter
-    Log.trace(F("CmdProc::processCommands - buffer: '%s'" CR), buffer->getBuffer());
+    Log.trace(F("CmdProc::processCommands - buffer: '%s' [%d]" CR), buffer->getBuffer(), strlen(buffer->getBuffer()));
     if (buffer->GetNext() == 'c') {
         Log.trace(F("Found 'c', switching to config" CR));
         sp->setLineProcessor(sp->commandList->processor);

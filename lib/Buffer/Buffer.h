@@ -16,6 +16,7 @@ class Buffer {
         void Clear();
         bool AtEnd();
         char* getBuffer();
+        bool Delete();
 
     private:
         char _buffer[BUFFERSIZE + 1];
