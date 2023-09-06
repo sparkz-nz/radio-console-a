@@ -10,9 +10,12 @@ class SerialProcessor;
 class CommandLineProcessor {
     public:
         CommandLineProcessor() {};
-        SerialProcessor* sp;
-        CommandLineProcessor(SerialProcessor *serialProc) : sp(serialProc) {}
+        SerialProcessor* serProc;
+        CommandLineProcessor(SerialProcessor *serialProc) : serProc(serialProc) {}
         virtual void processLine(Buffer* buffer) {};
+        virtual void initProcess(Buffer* buffer) {
+            Log.trace(F("CommandLineProcessor::initProcess [%s](%d)" CR), buffer->getBuffer(), buffer->GetIndex());
+        };
     private:
 };
 

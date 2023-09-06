@@ -9,7 +9,7 @@ void printCmdList(Command* list);
 
 SerialProcessor::SerialProcessor(Stream* serial):
     _serial(serial) {
-        cmdProc.sp = this;
+        cmdProc.serProc = this;
         resetLineProcessor();
 }
 
@@ -49,29 +49,6 @@ bool SerialProcessor::read() {
                 if (ECHO_ON) _serial->write(c);
                 _buffer.AddChar(c);
         }
-
-        // // if CR then check if next is LF or change to LF to signal eol
-        // if (c == '\r') {
-        //     if (_serial->peek() == '\n') {
-        //         _serial->read();
-        //     }
-        //     c='\n';
-        // }
-
-        // if (ECHO_ON) _serial->write(c);
-
-        // if (c == '\b') {
-        //     Log.trace(F("DELETE"));
-        //     _buffer.Delete();
-        //     if (ECHO_ON) _serial->write(F("<<<"));
-        // }
-
-        // if (c == '\n') {
-        //     return true; // end of line
-        // }
-        // else {
-        //     _buffer.AddChar(c);
-        // }
     }
     return false;
 }
@@ -84,10 +61,26 @@ void CmdProc::processLine(Buffer *buffer) {
     // walk through commandList and compare to start of buffer
     // if found, call the callback for that command with the buffer as a parameter
     Log.trace(F("CmdProc::processCommands - buffer: '%s' [%d]" CR), buffer->getBuffer(), strlen(buffer->getBuffer()));
-    if (buffer->GetNext() == 'c') {
-        Log.trace(F("Found 'c', switching to config" CR));
-        sp->setLineProcessor(sp->commandList->processor);
+
+    Command* cmdPtr = serProc->commandList;
+    while (cmdPtr) {
+        Log.trace(F("checking %d chars of cmdPtr->cmdString '%s' against buffer '%s'" CR), strlen(cmdPtr->cmdString), cmdPtr->cmdString, buffer->getBuffer());
+        if (strncmp(cmdPtr->cmdString, buffer->getBuffer(), strlen(cmdPtr->cmdString)) == 0) {
+            Log.trace(F("Found command %s, setting processor..." CR));
+            buffer->SetIndex(strlen(cmdPtr->cmdString)); // buffer index to next char after command token
+            while (buffer->PeekNext() == ' ') buffer->GetNext(); // consume any spaces
+            serProc->setLineProcessor(cmdPtr->processor);
+            cmdPtr->processor->initProcess(buffer);
+            break;
+        }
+        cmdPtr = cmdPtr->next;
     }
+
+
+    // if (buffer->GetNext() == 'c') {
+    //     Log.trace(F("Found 'c', switching to config" CR));
+    //     serProc->setLineProcessor(serProc->commandList->processor);
+    // }
 };
 
 /** --- registerCommand

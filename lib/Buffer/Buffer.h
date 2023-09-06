@@ -17,6 +17,9 @@ class Buffer {
         bool AtEnd();
         char* getBuffer();
         bool Delete();
+        int SetIndex(int index);
+        char PeekNext();
+        int GetIndex();
 
     private:
         char _buffer[BUFFERSIZE + 1];

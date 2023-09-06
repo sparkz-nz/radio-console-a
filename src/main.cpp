@@ -11,6 +11,7 @@ char buffer[6];
 Configuration config;
 SerialProcessor sp(&Serial);
 ConfigCmdProcessor configCmdProc(&sp);
+SaveCmdProcessor saveCmdProc(&sp);
 
 void printMsg();
 
@@ -22,10 +23,7 @@ void setup() {
 
 
   sp.registerCommand("config", &configCmdProc);
-  // sp.registerCommand("save", &saveConfig);
-  // sp.registerCommand("another", &saveConfig);
-  // sp.registerCommand("more", &saveConfig);
-
+  sp.registerCommand("save", &saveCmdProc);
 
   sp.debug();
 }

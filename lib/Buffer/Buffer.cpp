@@ -46,3 +46,21 @@ bool Buffer::Delete() {
     }
     return false;
 }
+
+int Buffer::SetIndex(int index) {
+    if (index <= _end) {
+        _index = index;
+    }
+    else {
+        _index = _end;
+    }
+    return _index;
+}
+
+char Buffer::PeekNext() {
+    return(_buffer[_index]);
+}
+
+int Buffer::GetIndex() {
+    return _index;
+}
