@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 #include <Arduino.h>
+#include <Buffer.h>
 #include "KeyMap.h"
 
 #define LEFTSHIFT  0b00100000
@@ -18,9 +19,13 @@
 #define EEPROM_CONFIG_ADDR 0x300
 
 
-struct SwitchConfig {
+struct SwitchResponse {
   char character;
   byte modifiers;
+};
+
+struct SwitchConfig {
+  SwitchResponse response[2];
 };
 
 struct Mode {
@@ -30,17 +35,12 @@ struct Mode {
 
 class Configuration {
   public:
-    Mode Modes[NUMMODES];
-    void Save();
-    void Recall();
-    void ReadFromSerial();
-    void ClearConfig();
+    Mode modes[NUMMODES];
+    void save();
+    void recall();
+    void processLine(Buffer *buffer);
+    void clearConfig();
 
-  private:
-    enum SwitchTypes {
-      Switch, Encoder
-    };
-    void AddConfig(SwitchTypes switchType);
 
 };
 

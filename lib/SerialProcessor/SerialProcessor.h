@@ -14,7 +14,7 @@ class CommandLineProcessor {
         CommandLineProcessor(SerialProcessor *serialProc) : serProc(serialProc) {}
         virtual void processLine(Buffer* buffer) {};
         virtual void initProcess(Buffer* buffer) {
-            Log.trace(F("CommandLineProcessor::initProcess [%s](%d)" CR), buffer->getBuffer(), buffer->GetIndex());
+            Log.trace(F("CommandLineProcessor::initProcess [%s](%d)" CR), buffer->getBuffer(), buffer->getIndex());
         };
     private:
 };

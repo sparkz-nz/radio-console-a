@@ -3,43 +3,43 @@
 #include "Buffer.h"
 
 Buffer::Buffer() {
-    Clear();
+    clear();
 }
 
-void Buffer::Clear() {
+void Buffer::clear() {
     _buffer[0] = '\0';  // pointer to start of buffer array
     _index = 0;         // current position for reading through
     _end = 0;           // index of null terminator
 }
 
-void Buffer::AddChar(char c) {
+void Buffer::addChar(char c) {
     if (_end < BUFFERSIZE) {
         _buffer[_end] = c;
         _buffer[++_end] = '\0';
     }
 }
 
-char Buffer::GetNext() {
+char Buffer::getNext() {
     if (_buffer[_index] != '\0') {
         return _buffer[_index++];
     }
     return '\0';
 }
 
-char Buffer::GetFirst() {
+char Buffer::getFirst() {
     _index = 0;
-    return GetNext();
+    return getNext();
 }
 
 char* Buffer::getBuffer() {
     return _buffer;
 }
 
-bool Buffer::AtEnd() {
-    return (_buffer[_index] == NULL);
+bool Buffer::atEnd() {
+    return (_buffer[_index] == '\0');
 }
 
-bool Buffer::Delete() {
+bool Buffer::deleteLast() {
     if (_end > 0) {
         _buffer[--_end] = '\0';
         return true;
@@ -47,7 +47,7 @@ bool Buffer::Delete() {
     return false;
 }
 
-int Buffer::SetIndex(int index) {
+int Buffer::setIndex(int index) {
     if (index <= _end) {
         _index = index;
     }
@@ -57,10 +57,21 @@ int Buffer::SetIndex(int index) {
     return _index;
 }
 
-char Buffer::PeekNext() {
+char Buffer::peekNext() {
     return(_buffer[_index]);
 }
 
-int Buffer::GetIndex() {
+int Buffer::getIndex() {
     return _index;
+}
+
+int Buffer::parseInt() {
+    int result = 0;
+    int weight = 1; 
+    while (isdigit(_buffer[_index])) {
+        int d = getNext() - '0';
+        result *= weight + d;
+        weight *= 10;
+    }
+    return result;
 }

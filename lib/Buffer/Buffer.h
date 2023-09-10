@@ -9,17 +9,17 @@
 class Buffer {
     public:
         Buffer();
-        void AddChar(char c);
-        char GetNext();
-        char GetFirst();
-        int ParseInt();
-        void Clear();
-        bool AtEnd();
+        void addChar(char c);
+        char getNext();
+        char getFirst();
+        int parseInt();
+        void clear();
+        bool atEnd();
         char* getBuffer();
-        bool Delete();
-        int SetIndex(int index);
-        char PeekNext();
-        int GetIndex();
+        bool deleteLast();
+        int setIndex(int index);
+        char peekNext();
+        int getIndex();
 
     private:
         char _buffer[BUFFERSIZE + 1];

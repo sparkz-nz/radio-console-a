@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
-#include "SerialProcessor.h"
-#include "Buffer.h"
+#include <SerialProcessor.h>
+#include <Buffer.h>
 
 #define ECHO_ON 1
 
@@ -20,7 +20,7 @@ SerialProcessor::SerialProcessor(Stream* serial):
 void SerialProcessor::checkSerial() {
     if (read()) {
         currentLineProc->processLine(&_buffer);
-        _buffer.Clear();
+        _buffer.clear();
     }
 }
 
@@ -33,7 +33,7 @@ bool SerialProcessor::read() {
 
         switch (c) {
             case '\b':
-                if (_buffer.Delete() && ECHO_ON) _serial->write("\b \b");
+                if (_buffer.deleteLast() && ECHO_ON) _serial->write("\b \b");
                 break;
 
             case '\r':
@@ -47,7 +47,7 @@ bool SerialProcessor::read() {
 
             default:
                 if (ECHO_ON) _serial->write(c);
-                _buffer.AddChar(c);
+                _buffer.addChar(c);
         }
     }
     return false;
@@ -67,8 +67,8 @@ void CmdProc::processLine(Buffer *buffer) {
         Log.trace(F("checking %d chars of cmdPtr->cmdString '%s' against buffer '%s'" CR), strlen(cmdPtr->cmdString), cmdPtr->cmdString, buffer->getBuffer());
         if (strncmp(cmdPtr->cmdString, buffer->getBuffer(), strlen(cmdPtr->cmdString)) == 0) {
             Log.trace(F("Found command %s, setting processor..." CR));
-            buffer->SetIndex(strlen(cmdPtr->cmdString)); // buffer index to next char after command token
-            while (buffer->PeekNext() == ' ') buffer->GetNext(); // consume any spaces
+            buffer->setIndex(strlen(cmdPtr->cmdString)); // buffer index to next char after command token
+            while (buffer->peekNext() == ' ') buffer->getNext(); // consume any spaces
             serProc->setLineProcessor(cmdPtr->processor);
             cmdPtr->processor->initProcess(buffer);
             break;
@@ -77,7 +77,7 @@ void CmdProc::processLine(Buffer *buffer) {
     }
 
 
-    // if (buffer->GetNext() == 'c') {
+    // if (buffer->getNext() == 'c') {
     //     Log.trace(F("Found 'c', switching to config" CR));
     //     serProc->setLineProcessor(serProc->commandList->processor);
     // }
@@ -123,5 +123,5 @@ void SerialProcessor::resetLineProcessor() {
 void SerialProcessor::debug() {
 
     Log.trace("debug - Buffer: %s" CR, _buffer.getBuffer());
-    _buffer.Clear();
+    _buffer.clear();
 }

@@ -1,60 +1,132 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
 #include <EEPROM.h>
-#include "Config.h"
+#include <Buffer.h>
+#include <Config.h>
 
 void FlushUntilEOL();
 char ParseKeycode(char c);
+char parseEscapeSequence(Buffer* buffer);
 
-void Configuration::Save() {
-  EEPROM.put(EEPROM_CONFIG_ADDR, Modes);
+enum SwitchTypes {
+    None, Switch, Encoder
+};
+
+struct TokenizedLine {
+    SwitchTypes switchType;
+    int switchNumber;
+    SwitchResponse response[2];
+};
+
+void Configuration::save() {
+  EEPROM.put(EEPROM_CONFIG_ADDR, modes);
 }
 
-void Configuration::Recall() {
-  EEPROM.get(EEPROM_CONFIG_ADDR, Modes);
+void Configuration::recall() {
+  EEPROM.get(EEPROM_CONFIG_ADDR, modes);
 }
 
-void Configuration::ReadFromSerial() {
-    if (!Serial.available()) {
-        Log.error(F("Reading configuration from serial - no data available" CR));
+void Configuration::processLine(Buffer *buffer) {
+    if (buffer->atEnd()) {
+        Log.error(F("Config line processor - no data" CR));
         return;
     }
 
-    int lineNo, charNo;
 
-    while (Serial.available()) {
-        char c = Serial.read();
-        lineNo++; charNo++;
 
-        switch (c) {
-            case 'c': // Clear current configuration
-            case 'C':
-                ClearConfig();
-                break;
-            
-            case 's': // switch definition
-            case 'S':
-                break;
+}
 
-            case 'e': // encoder definition
-            case 'E':
-                break;
+void Configuration::clearConfig() {
 
-            default:
-                Log.error(F("Configuration.ReadFromSerial line %d character %d '%c'" CR), lineNo, charNo, c);
-                break;
-        }
+}
+
+TokenizedLine tokenizeLine(Buffer* buffer) {
+    TokenizedLine result;
+
+    // first character - switch type s or e
+    switch (buffer->getNext()) {
+        case 's':
+        case 'S':
+            result.switchType = Switch;
+            break;
+
+        case 'e':
+        case 'E':
+            result.switchType = Encoder;
+            break;
+        
+        default:
+            result.switchType = None;
+            Log.error(F("Invalid switch type in line '%s'" CR), buffer->getBuffer());
+            return result;
+    }
+
+    // next one or two chars - switch number
+    if (isdigit(buffer->peekNext())) {
+        result.switchNumber = buffer->parseInt();
+    }
+    else {
+        result.switchType = None;
+        Log.error(F("Invalid switch number in line '%s'" CR), buffer->getBuffer());
+        return result;
+    }
+    
+    // expect : next
+    if (buffer->getNext() != ':') {
+        result.switchType = None;
+        Log.error(F("Expected : in line '%s'" CR), buffer->getBuffer());
+        return result;
+    }
+
+    // next is the char or an escape sequence
+    char c = buffer->getNext();
+    if (c != ':') {
+        if (c == '\\') c = parseEscapeSequence(buffer);
 
     }
-    Log.trace(F("[ReadFromSerial] No more serial available" CR));
 
+    return result;
 }
 
-void Configuration::ClearConfig() {
+char parseEscapeSequence(Buffer* buffer) {
+    int startIndex = buffer->getIndex();
+    char nextChar;
+    // walk the buffer looking for '\'
+    do {
+        nextChar = buffer->getNext();
+    } while (nextChar != '\\' && nextChar != '\0');
 
+    if (nextChar == '\0') return nextChar;
+
+    
 }
 
-void Configuration::AddConfig(SwitchTypes switchType) {
+char searchStringTable(char* charBuf, int len) {
+    int i = 0;
+    int val = -1;
+    bool found = false;
+    do {
+        found = (strncmp_P(charBuf, (const char*)pgm_read_word(&(stringTable[i])), len) == 0);
+        val = pgm_read_byte(&keycodeTable[i]);
+        if (found) {
+            Log.trace(F("Found string in string table at index %d, keycode %X" CR), i, val);
+        }
+    } while (!found && val != 0);
+    return val;
+}
+
+
+void parseAction(Buffer* buffer) {
+    char* start = buffer->getBuffer() + buffer->getIndex();
+    Log.trace(F(""));
+}
+
+
+
+
+// old implememntation
+
+void AddConfig(SwitchTypes switchType) {
     int numSwitches;
     char switchChar;
     if (switchType == Switch) {
