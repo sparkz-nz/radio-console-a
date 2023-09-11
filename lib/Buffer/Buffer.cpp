@@ -69,9 +69,11 @@ int Buffer::parseInt() {
     int result = 0;
     int weight = 1; 
     while (isdigit(_buffer[_index])) {
+        Log.trace("[%d]'%c' ", _index, _buffer[_index]);
         int d = getNext() - '0';
-        result *= weight + d;
+        result = (result * weight) + d;
         weight *= 10;
+        Log.trace("(%d) %d -> %d" CR, weight, d, result);
     }
     return result;
 }
@@ -79,6 +81,6 @@ int Buffer::parseInt() {
 void Buffer::addString(const char* str) {
     int i = 0;
     while (str[i]) {
-        addChar(str[i]);
+        addChar(str[i++]);
     }
 }
