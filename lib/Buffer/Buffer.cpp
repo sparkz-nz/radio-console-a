@@ -75,3 +75,10 @@ int Buffer::parseInt() {
     }
     return result;
 }
+
+void Buffer::addString(const char* str) {
+    int i = 0;
+    while (str[i]) {
+        addChar(str[i]);
+    }
+}

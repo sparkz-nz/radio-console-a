@@ -4,9 +4,6 @@
 #include <Buffer.h>
 #include <Config.h>
 
-void FlushUntilEOL();
-char ParseKeycode(char c);
-char parseEscapeSequence(Buffer* buffer);
 
 enum SwitchTypes {
     None, Switch, Encoder
@@ -17,6 +14,11 @@ struct TokenizedLine {
     int switchNumber;
     SwitchResponse response[2];
 };
+
+void FlushUntilEOL();
+char ParseKeycode(char c);
+char parseEscapeSequence(Buffer* buffer);
+TokenizedLine tokenizeLine(Buffer* buffer);
 
 void Configuration::save() {
   EEPROM.put(EEPROM_CONFIG_ADDR, modes);
@@ -32,6 +34,7 @@ void Configuration::processLine(Buffer *buffer) {
         return;
     }
 
+    tokenizeLine(buffer);
 
 
 }
@@ -48,11 +51,13 @@ TokenizedLine tokenizeLine(Buffer* buffer) {
         case 's':
         case 'S':
             result.switchType = Switch;
+            Log.trace(F("Found s" CR));
             break;
 
         case 'e':
         case 'E':
             result.switchType = Encoder;
+            Log.trace(F("Found e" CR));
             break;
         
         default:
@@ -64,6 +69,7 @@ TokenizedLine tokenizeLine(Buffer* buffer) {
     // next one or two chars - switch number
     if (isdigit(buffer->peekNext())) {
         result.switchNumber = buffer->parseInt();
+        Log.trace(F("Found number %d" CR), result.switchNumber);
     }
     else {
         result.switchType = None;
@@ -80,10 +86,9 @@ TokenizedLine tokenizeLine(Buffer* buffer) {
 
     // next is the char or an escape sequence
     char c = buffer->getNext();
-    if (c != ':') {
-        if (c == '\\') c = parseEscapeSequence(buffer);
-
-    }
+    if (c == '\\') c = parseEscapeSequence(buffer);
+    Log.trace(F("character %X" CR), c);
+    
 
     return result;
 }

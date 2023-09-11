@@ -14,6 +14,7 @@ ConfigCmdProcessor configCmdProc(&sp);
 SaveCmdProcessor saveCmdProc(&sp);
 
 void printMsg();
+void test();
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
@@ -21,11 +22,10 @@ void setup() {
   Log.begin(LOG_LEVEL_VERBOSE, &Serial, false);
   Log.trace("Starting..." CR);
 
-
   sp.registerCommand("config", &configCmdProc);
   sp.registerCommand("save", &saveCmdProc);
 
-  sp.debug();
+  test();
 }
 
 void loop() {
@@ -51,4 +51,13 @@ void loop() {
 
 void printMsg() {
   Log.trace("I got called" CR);
+}
+
+void test() {
+  Buffer buf;
+  buf.addString("s1:aLS");
+  Log.trace(F("Testing '%s'" CR), buf.getBuffer());
+
+  config.processLine(&buf);
+
 }

@@ -20,6 +20,7 @@ class Buffer {
         int setIndex(int index);
         char peekNext();
         int getIndex();
+        void addString(const char*);
 
     private:
         char _buffer[BUFFERSIZE + 1];
