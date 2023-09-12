@@ -1,23 +1,31 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
 #include <SerialProcessor.h>
-
+#include <Config.h>
 
 
 
 class ConfigCmdProcessor : public CommandLineProcessor {
     public:
-        ConfigCmdProcessor(SerialProcessor *serialProc) : CommandLineProcessor(serialProc) {}
+        ConfigCmdProcessor(SerialProcessor *serialProc, Configuration *configuration)
+         : CommandLineProcessor(serialProc) {
+            config=configuration;
+        }
 
         void processLine(Buffer* buffer) {
             Log.trace(F("configCmdProcessor::processLine buffer='%s'" CR), buffer->getBuffer());
             
-            // when all done reset processor 
+            // if empty line, return to command processor 
             if (buffer->atEnd()) {
                 serProc->resetLineProcessor();
                 Log.trace(F("configCmdProcessor::processLine - buffer empty, resetting back to cmdProc" CR));
-                }
+            }
+
+            config->processLine(buffer);
         };
+
+    private:
+        Configuration* config;
 };
 
 class SaveCmdProcessor : public CommandLineProcessor {

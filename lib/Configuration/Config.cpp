@@ -19,6 +19,7 @@ void FlushUntilEOL();
 char ParseKeycode(char c);
 char parseEscapeSequence(Buffer* buffer);
 TokenizedLine tokenizeLine(Buffer* buffer);
+char searchStringTable(char* charBuf, int len);
 
 void Configuration::save() {
   EEPROM.put(EEPROM_CONFIG_ADDR, modes);
@@ -87,36 +88,47 @@ TokenizedLine tokenizeLine(Buffer* buffer) {
     // next is the char or an escape sequence
     char c = buffer->getNext();
     if (c == '\\') c = parseEscapeSequence(buffer);
-    Log.trace(F("character %X" CR), c);
-    
-
+    if (c == 0){
+        Log.trace(F("Failed to find escape sequence" CR));
+    }
+    else {
+        Log.trace(F("Found keycode %X" CR), c);
+    }
     return result;
 }
 
 char parseEscapeSequence(Buffer* buffer) {
     int startIndex = buffer->getIndex();
     char nextChar;
+    Log.trace(F("parse escape sequence..." CR));
     // walk the buffer looking for '\'
     do {
         nextChar = buffer->getNext();
+        Log.trace("[%c]", nextChar);
     } while (nextChar != '\\' && nextChar != '\0');
+    Log.trace(CR);
 
-    if (nextChar == '\0') return nextChar;
+    if (nextChar == '\0') return nextChar; // reached end of buffer with no '\' so return null
 
-    
+    int lenEscSeq = buffer->getIndex() - startIndex;
+    char keyCode = searchStringTable(buffer->getBuffer() + startIndex, lenEscSeq - 1);
+    Log.trace("parseEscapeSequence returns %X" CR, keyCode);
+    return keyCode;
 }
 
 char searchStringTable(char* charBuf, int len) {
+    Log.trace("Searching string table for %d chars of %s" CR, len, charBuf);
     int i = 0;
-    int val = -1;
+    char val = 0xFF;
     bool found = false;
     do {
         found = (strncmp_P(charBuf, (const char*)pgm_read_word(&(stringTable[i])), len) == 0);
-        val = pgm_read_byte(&keycodeTable[i]);
+        val = pgm_read_byte(&keycodeTable[i++]); // read keycode, 0 at end
         if (found) {
-            Log.trace(F("Found string in string table at index %d, keycode %X" CR), i, val);
+            Log.trace(F("Found string in string table at index %d, keycode %X" CR), i-1, val);
         }
-    } while (!found && val != 0);
+    } while (!found && val != 0); // until we find it or reach the end
+    Log.trace("seachStringTable returns %X" CR, val);
     return val;
 }
 

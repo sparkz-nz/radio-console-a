@@ -10,7 +10,7 @@
 char buffer[6];
 Configuration config;
 SerialProcessor sp(&Serial);
-ConfigCmdProcessor configCmdProc(&sp);
+ConfigCmdProcessor configCmdProc(&sp, &config);
 SaveCmdProcessor saveCmdProc(&sp);
 
 void printMsg();

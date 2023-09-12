@@ -66,7 +66,7 @@ void CmdProc::processLine(Buffer *buffer) {
     while (cmdPtr) {
         Log.trace(F("checking %d chars of cmdPtr->cmdString '%s' against buffer '%s'" CR), strlen(cmdPtr->cmdString), cmdPtr->cmdString, buffer->getBuffer());
         if (strncmp(cmdPtr->cmdString, buffer->getBuffer(), strlen(cmdPtr->cmdString)) == 0) {
-            Log.trace(F("Found command %s, setting processor..." CR));
+            Log.trace(F("Found command %s, setting processor..." CR), cmdPtr->cmdString);
             buffer->setIndex(strlen(cmdPtr->cmdString)); // buffer index to next char after command token
             while (buffer->peekNext() == ' ') buffer->getNext(); // consume any spaces
             serProc->setLineProcessor(cmdPtr->processor);

@@ -67,13 +67,11 @@ int Buffer::getIndex() {
 
 int Buffer::parseInt() {
     int result = 0;
-    int weight = 1; 
     while (isdigit(_buffer[_index])) {
         Log.trace("[%d]'%c' ", _index, _buffer[_index]);
         int d = getNext() - '0';
-        result = (result * weight) + d;
-        weight *= 10;
-        Log.trace("(%d) %d -> %d" CR, weight, d, result);
+        result = (result * 10) + d;
+        Log.trace("%d -> %d" CR, d, result);
     }
     return result;
 }
