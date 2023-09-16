@@ -1,34 +1,20 @@
 #include <Arduino.h>
 #include "Keyboard.h"
 
-/*
-struct keycode {
-    char keyName[6];
-    byte keyValue;
-};
 
-const keycode kc_LC PROGMEM = {"LC\0", KEY_LEFT_CTRL};
-const keycode kc_LS PROGMEM = {"LS\0", KEY_LEFT_SHIFT};
-const keycode kc_LA PROGMEM = {"LA\0", KEY_LEFT_ALT};
-const keycode kc_LG PROGMEM = {"LG", KEY_LEFT_GUI};
-const keycode kc_RC PROGMEM = {"RC", KEY_RIGHT_CTRL};
-const keycode kc_RS PROGMEM = {"RS", KEY_RIGHT_SHIFT};
-const keycode kc_RA PROGMEM = {"RA", KEY_RIGHT_ALT};
-const keycode kc_RG PROGMEM = {"RG", KEY_RIGHT_GUI};
-const keycode kc_END PROGMEM = {"END", 0};
-*/
-
-const char s_LC[]   PROGMEM = "LC";         const byte kc_LC    PROGMEM = KEY_LEFT_CTRL;
-const char s_LS[]   PROGMEM = "LS";         const byte kc_LS    PROGMEM = KEY_LEFT_SHIFT;
-const char s_LA[]   PROGMEM = "LA";         const byte kc_LA    PROGMEM = KEY_LEFT_ALT;
-const char s_LG[]   PROGMEM = "LG";         const byte kc_LG    PROGMEM = KEY_LEFT_GUI;
-const char s_RC[]   PROGMEM = "RC";         const byte kc_RC    PROGMEM = KEY_RIGHT_CTRL;
-const char s_RS[]   PROGMEM = "RS";         const byte kc_RS    PROGMEM = KEY_RIGHT_SHIFT;
-const char s_RA[]   PROGMEM = "RA";         const byte kc_RA    PROGMEM = KEY_RIGHT_ALT;
-const char s_RG[]   PROGMEM = "RG";         const byte kc_RG    PROGMEM = KEY_RIGHT_GUI;
-const char s_F1[]   PROGMEM = "F1";         const byte kc_F1    PROGMEM = KEY_F1;
-const char s_F2[]   PROGMEM = "F2";         const byte kc_F2    PROGMEM = KEY_F2;
-const char s_ESC[]  PROGMEM = "ESC";        const byte kc_ESC   PROGMEM = KEY_ESC;
+const char sbs[]   PROGMEM = "\\";         const byte kbs    PROGMEM = '\\';
+const char scln[]  PROGMEM = ":";          const byte kcln   PROGMEM = ':';
+const char sLC[]   PROGMEM = "LC";         const byte kLC    PROGMEM = KEY_LEFT_CTRL;
+const char sLS[]   PROGMEM = "LS";         const byte kLS    PROGMEM = KEY_LEFT_SHIFT;
+const char sLA[]   PROGMEM = "LA";         const byte kLA    PROGMEM = KEY_LEFT_ALT;
+const char sLG[]   PROGMEM = "LG";         const byte kLG    PROGMEM = KEY_LEFT_GUI;
+const char sRC[]   PROGMEM = "RC";         const byte kRC    PROGMEM = KEY_RIGHT_CTRL;
+const char sRS[]   PROGMEM = "RS";         const byte kRS    PROGMEM = KEY_RIGHT_SHIFT;
+const char sRA[]   PROGMEM = "RA";         const byte kRA    PROGMEM = KEY_RIGHT_ALT;
+const char sRG[]   PROGMEM = "RG";         const byte kRG    PROGMEM = KEY_RIGHT_GUI;
+const char sF1[]   PROGMEM = "F1";         const byte kF1    PROGMEM = KEY_F1;
+const char sF2[]   PROGMEM = "F2";         const byte kF2    PROGMEM = KEY_F2;
+const char sESC[]  PROGMEM = "ESC";        const byte kESC   PROGMEM = KEY_ESC;
 //const char s_[] PROGMEM = "";           const byte kc_ PROGMEM = ;
 /*const char s_[] PROGMEM = "";           const byte kc_RG PROGMEM = ;
 const char s_[] PROGMEM = "";           const byte kc_RG PROGMEM = ;
@@ -42,10 +28,10 @@ const char s_[] PROGMEM = "";           const byte kc_RG PROGMEM = ;
 const char s_[] PROGMEM = "";           const byte kc_RG PROGMEM = ;
 const char s_[] PROGMEM = "";           const byte kc_RG PROGMEM = ;
 const char s_[] PROGMEM = "";           const byte kc_RG PROGMEM = ;*/
-const char s_EOL[] PROGMEM = "EOL";         const byte kc_EOL PROGMEM = 0;
+const char sEOL[] PROGMEM = "EOL";         const byte kEOL PROGMEM = 0;
 
 
 
 
-const char* const stringTable[] PROGMEM = {s_LC, s_LS, s_LA, s_LG, s_RC, s_RS, s_RA, s_RG, s_F1, s_F2, s_ESC, s_EOL};
-const byte keycodeTable[] PROGMEM = {kc_LC, kc_LS, kc_LA, kc_LG, kc_RC, kc_RS, kc_RA, kc_RG, kc_F1, kc_F2, kc_ESC, kc_EOL};
+const char* const stringTable[] PROGMEM = {sbs, scln, sLC, sLS, sLA, sLG, sRC, sRS, sRA, sRG, sF1, sF2, sESC, sEOL};
+const byte keycodeTable[] PROGMEM =       {kbs, kcln, kLC, kLS, kLA, kLG, kRC, kRS, kRA, kRG, kF1, kF2, kESC, kEOL};

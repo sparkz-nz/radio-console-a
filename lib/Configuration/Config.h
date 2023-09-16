@@ -5,6 +5,8 @@
 #include <Buffer.h>
 #include "KeyMap.h"
 
+#define MAXMODIFIERS 4
+
 #define LEFTSHIFT  0b00100000
 #define LEFTCTRL   0b00010000
 #define LEFTALT    0b00001000
@@ -20,8 +22,8 @@
 
 
 struct SwitchResponse {
-  char character;
-  byte modifiers;
+  char character = '\0';
+  char modifiers[MAXMODIFIERS] = {0};
 };
 
 struct SwitchConfig {

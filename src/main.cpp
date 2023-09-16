@@ -54,10 +54,5 @@ void printMsg() {
 }
 
 void test() {
-  Buffer buf;
-  buf.addString("s1:aLS");
-  Log.trace(F("Testing '%s'" CR), buf.getBuffer());
-
-  config.processLine(&buf);
 
 }

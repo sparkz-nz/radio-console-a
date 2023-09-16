@@ -18,6 +18,7 @@ struct TokenizedLine {
 void FlushUntilEOL();
 char ParseKeycode(char c);
 char parseEscapeSequence(Buffer* buffer);
+char parseModifier(Buffer* buffer);
 TokenizedLine tokenizeLine(Buffer* buffer);
 char searchStringTable(char* charBuf, int len);
 
@@ -35,7 +36,28 @@ void Configuration::processLine(Buffer *buffer) {
         return;
     }
 
-    tokenizeLine(buffer);
+    TokenizedLine tLine = tokenizeLine(buffer);
+
+    // debug
+    Log.trace(F("Tokenized Line: <%d>%d: "), tLine.switchType, tLine.switchNumber);
+    for (int i=0; i<2; i++){
+        char c = tLine.response[i].character;
+        if (c > ' ' && c <= 'z') {
+            Log.trace("%c (", c);
+        }
+        else {
+            Log.trace("%x (", c);
+        }
+        for (int m = 0; tLine.response[i].modifiers[m] != '\0'; m++) {
+            Log.trace(" %X", tLine.response[i].modifiers[m]);
+        }
+        if (i == 0) {
+            Log.trace(") : ");
+        }
+        else {
+            Log.trace(")" CR);
+        }
+    }
 
 
 }
@@ -85,15 +107,30 @@ TokenizedLine tokenizeLine(Buffer* buffer) {
         return result;
     }
 
-    // next is the char or an escape sequence
-    char c = buffer->getNext();
-    if (c == '\\') c = parseEscapeSequence(buffer);
-    if (c == 0){
-        Log.trace(F("Failed to find escape sequence" CR));
+    // next should be two response definitions (one for press/incr, one for release/decr)
+    for (int i=0; i < 2; i++) {
+        // first part is the char or an escape sequence or a ':' if nothing defined
+        char c = buffer->getNext();
+        if (c == ':') {
+            result.response[i].character = '\0'; // null indicates undefined action
+            continue;
+        }
+        else {
+            if (c == '\\') c = parseEscapeSequence(buffer);
+        }
+        result.response[i].character = c;
+
+        // next part should be zero or more modifiers terminated by ':' or '\0'
+        int numModifiers = 0;
+        while (buffer->peekNext() != ':' && buffer->peekNext() != '\0' && numModifiers < MAXMODIFIERS) {
+            result.response[i].modifiers[numModifiers++] = parseModifier(buffer);
+        }
+        buffer->getNext(); // consume the terminator
+        Log.trace(F("added %d modifiers" CR), numModifiers);
     }
-    else {
-        Log.trace(F("Found keycode %X" CR), c);
-    }
+
+
+
     return result;
 }
 
@@ -101,7 +138,7 @@ char parseEscapeSequence(Buffer* buffer) {
     int startIndex = buffer->getIndex();
     char nextChar;
     Log.trace(F("parse escape sequence..." CR));
-    // walk the buffer looking for '\'
+    // an escape sequence is terminated by '\' so walk the buffer looking for '\'
     do {
         nextChar = buffer->getNext();
         Log.trace("[%c]", nextChar);
@@ -114,6 +151,13 @@ char parseEscapeSequence(Buffer* buffer) {
     char keyCode = searchStringTable(buffer->getBuffer() + startIndex, lenEscSeq - 1);
     Log.trace("parseEscapeSequence returns %X" CR, keyCode);
     return keyCode;
+}
+
+char parseModifier(Buffer* buffer) {
+    char keycode = searchStringTable(buffer->getBuffer() + buffer->getIndex(), 2); // modifiers are two characters
+    Log.trace(F("parseModifier %s found %X" CR), buffer->getBuffer() + buffer->getIndex(), keycode);
+    buffer->getNext(); buffer->getNext(); // consume the two modifier characters, as searchStringTable does not
+    return keycode;
 }
 
 char searchStringTable(char* charBuf, int len) {
@@ -132,11 +176,6 @@ char searchStringTable(char* charBuf, int len) {
     return val;
 }
 
-
-void parseAction(Buffer* buffer) {
-    char* start = buffer->getBuffer() + buffer->getIndex();
-    Log.trace(F(""));
-}
 
 
 
