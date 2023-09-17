@@ -10,17 +10,17 @@ enum SwitchTypes {
 };
 
 struct TokenizedLine {
-    SwitchTypes switchType;
-    int switchNumber;
+    int mode = 0;
+    SwitchTypes switchType = None;
+    int switchNumber = 0;
     SwitchResponse response[2];
 };
 
 void FlushUntilEOL();
-char ParseKeycode(char c);
-char parseEscapeSequence(Buffer* buffer);
-char parseModifier(Buffer* buffer);
+uint8_t parseEscapeSequence(Buffer* buffer);
+uint8_t parseModifier(Buffer* buffer);
 TokenizedLine tokenizeLine(Buffer* buffer);
-char searchStringTable(char* charBuf, int len);
+uint8_t searchStringTable(char* charBuf, int len);
 
 void Configuration::save() {
   EEPROM.put(EEPROM_CONFIG_ADDR, modes);
@@ -38,18 +38,38 @@ void Configuration::processLine(Buffer *buffer) {
 
     TokenizedLine tLine = tokenizeLine(buffer);
 
-    // debug
-    Log.trace(F("Tokenized Line: <%d>%d: "), tLine.switchType, tLine.switchNumber);
+    if (tLine.switchType == None) {
+        Log.trace(F("Invalid configuration line '%s' ignored" CR), buffer->getBuffer());
+        return;
+    }
+
+    if (tLine.switchType == Switch) {
+        if (tLine.switchNumber >= 0 && tLine.switchNumber < NUMSWITCHES) {
+            modes[tLine.mode].switches[tLine.switchNumber-1].response[0] = tLine.response[0];
+            modes[tLine.mode].switches[tLine.switchNumber-1].response[1] = tLine.response[1];
+        }
+        else Log.error(F("Switch number %d out of bounds in line '%s'" CR), tLine.switchNumber, buffer->getBuffer());
+    }
+    else {
+        if (tLine.switchNumber >= 0 && tLine.switchNumber < NUMENCODERS) {
+            modes[tLine.mode].encoders[tLine.switchNumber-1].response[0] = tLine.response[0];
+            modes[tLine.mode].encoders[tLine.switchNumber-1].response[1] = tLine.response[1];
+        }
+        else Log.error(F("Encoder number %d out of bounds in line '%s'" CR), tLine.switchNumber, buffer->getBuffer());
+    }
+
+    // debug print stuff
+    Log.trace(F("Tokenized Line: Mode %d <%d>%d: "), tLine.mode, tLine.switchType, tLine.switchNumber);
     for (int i=0; i<2; i++){
         char c = tLine.response[i].character;
         if (c > ' ' && c <= 'z') {
             Log.trace("%c (", c);
         }
         else {
-            Log.trace("%x (", c);
+            Log.trace("%x (", uint8_t(c));
         }
         for (int m = 0; tLine.response[i].modifiers[m] != '\0'; m++) {
-            Log.trace(" %X", tLine.response[i].modifiers[m]);
+            Log.trace(" %X", uint8_t(tLine.response[i].modifiers[m]));
         }
         if (i == 0) {
             Log.trace(") : ");
@@ -69,7 +89,22 @@ void Configuration::clearConfig() {
 TokenizedLine tokenizeLine(Buffer* buffer) {
     TokenizedLine result;
 
-    // first character - switch type s or e
+    // first character is numeric mode 1..NUMMODES
+    char c = buffer->getNext();
+    int m = c - '1';
+    if (m < 0 || m >= NUMMODES) {
+        Log.error(F("Invalid mode %c in line '%s'" CR), c, buffer->getBuffer());
+        return result;
+    }
+    result.mode = m;
+
+    // expect : next
+    if (buffer->getNext() != ':') {
+        Log.error(F("Expected : after mode in line '%s'" CR), buffer->getBuffer());
+        return result;
+    }
+
+    // next character - switch type s or e
     switch (buffer->getNext()) {
         case 's':
         case 'S':
@@ -84,7 +119,6 @@ TokenizedLine tokenizeLine(Buffer* buffer) {
             break;
         
         default:
-            result.switchType = None;
             Log.error(F("Invalid switch type in line '%s'" CR), buffer->getBuffer());
             return result;
     }
@@ -103,7 +137,7 @@ TokenizedLine tokenizeLine(Buffer* buffer) {
     // expect : next
     if (buffer->getNext() != ':') {
         result.switchType = None;
-        Log.error(F("Expected : in line '%s'" CR), buffer->getBuffer());
+        Log.error(F("Expected : after switch number in line '%s'" CR), buffer->getBuffer());
         return result;
     }
 
@@ -129,12 +163,10 @@ TokenizedLine tokenizeLine(Buffer* buffer) {
         Log.trace(F("added %d modifiers" CR), numModifiers);
     }
 
-
-
     return result;
 }
 
-char parseEscapeSequence(Buffer* buffer) {
+uint8_t parseEscapeSequence(Buffer* buffer) {
     int startIndex = buffer->getIndex();
     char nextChar;
     Log.trace(F("parse escape sequence..." CR));
@@ -148,22 +180,22 @@ char parseEscapeSequence(Buffer* buffer) {
     if (nextChar == '\0') return nextChar; // reached end of buffer with no '\' so return null
 
     int lenEscSeq = buffer->getIndex() - startIndex;
-    char keyCode = searchStringTable(buffer->getBuffer() + startIndex, lenEscSeq - 1);
+    uint8_t keyCode = searchStringTable(buffer->getBuffer() + startIndex, lenEscSeq - 1);
     Log.trace("parseEscapeSequence returns %X" CR, keyCode);
     return keyCode;
 }
 
-char parseModifier(Buffer* buffer) {
-    char keycode = searchStringTable(buffer->getBuffer() + buffer->getIndex(), 2); // modifiers are two characters
+uint8_t parseModifier(Buffer* buffer) {
+    uint8_t keycode = searchStringTable(buffer->getBuffer() + buffer->getIndex(), 2); // modifiers are two characters
     Log.trace(F("parseModifier %s found %X" CR), buffer->getBuffer() + buffer->getIndex(), keycode);
     buffer->getNext(); buffer->getNext(); // consume the two modifier characters, as searchStringTable does not
     return keycode;
 }
 
-char searchStringTable(char* charBuf, int len) {
+uint8_t searchStringTable(char* charBuf, int len) {
     Log.trace("Searching string table for %d chars of %s" CR, len, charBuf);
     int i = 0;
-    char val = 0xFF;
+    uint8_t val = 0xFF;
     bool found = false;
     do {
         found = (strncmp_P(charBuf, (const char*)pgm_read_word(&(stringTable[i])), len) == 0);
@@ -180,65 +212,3 @@ char searchStringTable(char* charBuf, int len) {
 
 
 
-// old implememntation
-
-void AddConfig(SwitchTypes switchType) {
-    int numSwitches;
-    char switchChar;
-    if (switchType == Switch) {
-        numSwitches = NUMSWITCHES;
-        switchChar = 'S';
-    }
-    else {
-        numSwitches = NUMENCODERS;
-        switchChar = 'E';
-    }
-
-    // get the switch number
-    int switchNumber = Serial.parseInt(SKIP_NONE);
-    if (switchNumber < 1 || switchNumber > numSwitches) {
-        Log.error(F("Invalid switch number %c%d" CR), switchChar, switchNumber);
-        FlushUntilEOL();
-        return;
-    }
-
-    // next char should be a :
-    if (Serial.read() != ':') {
-        Log.error(F("Expected ':' after switch identifier %c%d" CR), switchChar, switchNumber);
-        FlushUntilEOL();
-        return;
-    }
-
-    // next char is a key or '\'
-    char c = Serial.read();
-    switch (c) {
-        case '\0': // timed out
-            Log.error(F("Timed out after ':'" CR));
-            return;
-        case '\\': // macro string to follow
-            c = ParseKeycode(c);
-            if (c == '\0') {
-                FlushUntilEOL();
-                return;
-            }
-            break;
-    }
-
-    Log.trace(F("Keycode %X" CR), c);
-
-    //char keyChar = Serial.read();
-    //if (keyChar != ',') //Keyboard.press('A');
-
-
-}
-
-void FlushUntilEOL() {
-    while (Serial.available()) {
-        char b = Serial.read();
-        if (b == '\n') break;
-    }
-}
-
-char ParseKeycode(char c) {
-    return '\0';
-}

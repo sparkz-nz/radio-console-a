@@ -12,6 +12,7 @@ Configuration config;
 SerialProcessor sp(&Serial);
 ConfigCmdProcessor configCmdProc(&sp, &config);
 SaveCmdProcessor saveCmdProc(&sp);
+DumpCmdProcessor dumpCmdProc(&sp, &config);
 
 void printMsg();
 void test();
@@ -24,6 +25,7 @@ void setup() {
 
   sp.registerCommand("config", &configCmdProc);
   sp.registerCommand("save", &saveCmdProc);
+  sp.registerCommand("dump", &dumpCmdProc);
 
   test();
 }
