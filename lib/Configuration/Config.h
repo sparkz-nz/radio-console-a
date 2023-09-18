@@ -39,7 +39,7 @@ class Configuration {
   public:
     Mode modes[NUMMODES];
     void save();
-    void recall();
+    void load();
     void processLine(Buffer *buffer);
     void clearConfig();
 

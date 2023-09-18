@@ -1,10 +1,13 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
+#include <EEPROM.h>
 #include <SerialProcessor.h>
 #include <Config.h>
 
 
-
+/**
+ * Config
+*/
 class ConfigCmdProcessor : public CommandLineProcessor {
     public:
         ConfigCmdProcessor(SerialProcessor *serialProc, Configuration *configuration)
@@ -28,25 +31,68 @@ class ConfigCmdProcessor : public CommandLineProcessor {
         Configuration* config;
 };
 
+/**
+ * Save
+*/
 class SaveCmdProcessor : public CommandLineProcessor {
     public:
-        SaveCmdProcessor(SerialProcessor *serialProc) : CommandLineProcessor(serialProc) {}
+        SaveCmdProcessor(SerialProcessor *serialProc, Configuration *configuration)
+        : CommandLineProcessor(serialProc) {
+            config=configuration;
+        }
 
         void initProcess(Buffer* buffer) override {
-            Log.trace(F("Saving to %s and returning to cmdProc" CR), buffer->getBuffer() + buffer->getIndex());
+            Log.trace(F("Saving... "));
+            config->save();
+            Log.trace(F("done. Returning to cmdProc" CR));
             serProc->resetLineProcessor();
         }
 
         void processLine(Buffer* buffer) {
-            Log.trace(F("SaveCmdProcessor::processLine buffer='%s'" CR), buffer->getBuffer());
+            Log.trace(F("SaveCmdProcessor::processLine buffer='%s' - this should never be called" CR), buffer->getBuffer());
             // when all done reset processor 
             if (buffer->atEnd()) {
                 serProc->resetLineProcessor();
                 Log.trace(F("SaveCmdProcessor::processLine - buffer empty, resetting back to cmdProc" CR));
                 }
         }
+    private:
+        Configuration* config;
 };
 
+/**
+ * Load
+*/
+class LoadCmdProcessor : public CommandLineProcessor {
+    public:
+        LoadCmdProcessor(SerialProcessor *serialProc, Configuration *configuration)
+        : CommandLineProcessor(serialProc) {
+            config=configuration;
+        }
+
+        void initProcess(Buffer* buffer) override {
+            Log.trace(F("Loading... "));
+            config->load();
+            Log.trace(F("done. Returning to cmdProc" CR));
+            serProc->resetLineProcessor();
+        }
+
+        void processLine(Buffer* buffer) {
+            Log.trace(F("LoadCmdProcessor::processLine buffer='%s' - this should never be called" CR), buffer->getBuffer());
+            // when all done reset processor 
+            if (buffer->atEnd()) {
+                serProc->resetLineProcessor();
+                Log.trace(F("LoadCmdProcessor::processLine - buffer empty, resetting back to cmdProc" CR));
+                }
+        }
+    private:
+        Configuration* config;
+};
+
+
+/**
+ * Dump
+*/
 class DumpCmdProcessor : public CommandLineProcessor {
     public:
         DumpCmdProcessor(SerialProcessor *serialProc, Configuration *configuration)
@@ -106,5 +152,4 @@ class DumpCmdProcessor : public CommandLineProcessor {
             }
             Log.notice(CR);
         }
-
 };

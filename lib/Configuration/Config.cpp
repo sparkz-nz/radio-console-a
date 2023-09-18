@@ -26,7 +26,7 @@ void Configuration::save() {
   EEPROM.put(EEPROM_CONFIG_ADDR, modes);
 }
 
-void Configuration::recall() {
+void Configuration::load() {
   EEPROM.get(EEPROM_CONFIG_ADDR, modes);
 }
 
